@@ -4,30 +4,47 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
+import org.apache.commons.cli.BasicParser;
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
 import org.neo4j.cypher.javacompat.ExecutionEngine;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.factory.GraphDatabaseFactory;
 
-import com.hardmatch.neo4j.cypher.CypherHelper;
+import com.sirolf2009.util.neo4j.cypher.CypherHelper;
 
 public class Main {
 	
 	private GraphDatabaseService graph;
 	private ExecutionEngine engine;
-	private final String DB_PATH = "C:/Users/Floris/Documents/Neo4j/Urenverantwoording.graphdb";
+	private String DB_PATH = "/Urenverantwoording.graphdb";
 	private BufferedReader reader;
 
-	public Main() {
+	public Main(Options options, String[] args) {
+        try {
+        	init(options, args);
+			run();
+		} catch (IOException e) {
+			e.printStackTrace();
+		} catch (ParseException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	public void init(Options options, String[] args) throws ParseException {
 		System.out.println("Starting up");
+		BasicParser parser = new BasicParser();
+		CommandLine cmd = parser.parse(options, args);
+		if(cmd.hasOption("p")) {
+			DB_PATH = cmd.getOptionValue("p");
+		}
+		
 		this.graph = new GraphDatabaseFactory().newEmbeddedDatabase(DB_PATH);
         engine = new ExecutionEngine(graph);
         reader = new BufferedReader(new InputStreamReader(System.in));
         System.out.println("Done");
-        try {
-			run();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
 	}
 	
 	public void run() throws IOException {
@@ -63,7 +80,9 @@ public class Main {
 	}
 
 	public static void main(String[] args) {
-		new Main();
+		Options options = new Options();
+		options.addOption(new Option("p", true, "The path of the Neo4J database"));
+		new Main(options, args);
 	}
 
 }
